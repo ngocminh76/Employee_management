@@ -1,6 +1,8 @@
 from tkinter import *
 from tkinter import ttk
 from PIL import Image, ImageTk
+import mysql.connector
+from tkinter import messagebox
 
 
 class Employee:
@@ -190,11 +192,11 @@ class Employee:
 
         button_frame = Frame(upper_frame, bd=2, relief=RIDGE, bg='white')
         button_frame.place(x=1290, y=20, width=170, height=210)
-        btn_add = Button(button_frame, text='Save', font=(
+        btn_add = Button(button_frame, command=self.add_data, text='Save', font=(
             'arial', 15, 'bold'), width=13, bg='blue', fg='white')
         btn_add.grid(row=0, column=0, padx=1, pady=5)
 
-        btn_update = Button(button_frame, text='Update', font=(
+        btn_update = Button(button_frame, command=self.update_data, text='Update', font=(
             'arial', 15, 'bold'), width=13, bg='blue', fg='white')
         btn_update.grid(row=1, column=0, padx=1, pady=5)
 
@@ -291,6 +293,118 @@ class Employee:
         self.employee_table.column('salary', width=100)
 
         self.employee_table.pack(fill=BOTH, expand=1)
+        self.employee_table.bind("<ButtonRelease>", self.get_cursor)
+
+        self.fetch_data()
+        # **************Fuction Declarations***************
+
+    def add_data(self):
+        if self.var_dep.get() == "" or self.var_email.get() == "":
+            messagebox.showerror('Error', 'All Fields are required')
+        else:
+            try:
+                conn = mysql.connector.connect(
+                    host='localhost', username='root', password='Mn03022023', database='mydata')
+                my_cursor = conn.cursor()
+                my_cursor.execute('insert into employee values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)', (
+
+                    self.var_dep.get(),
+                    self.var_name.get(),
+                    self.var_designition.get(),
+                    self.var_email.get(),
+                    self.var_address.get(),
+                    self.var_married.get(),
+                    self.var_dob.get(),
+                    self.var_doj.get(),
+                    self.var_idproofcomb.get(),
+                    self.var_idproof.get(),
+                    self.var_gender.get(),
+                    self.var_phone.get(),
+                    self.var_country.get(),
+                    self.var_salary.get(),
+
+                ))
+                conn.commit()
+                self.fetch_data()
+                conn.close()
+                messagebox.showinfo(
+                    'Success', 'Employee has been added !', parent=self.root)
+            except Exception as es:
+                messagebox.showerror(
+                    'Error', f'Due to :{str(es)}', parent=self.root)
+
+     # fetch data
+    def fetch_data(self):
+        conn = mysql.connector.connect(
+            host='localhost', username='root', password='Mn03022023', database='mydata')
+        my_cursor = conn.cursor()
+        my_cursor.execute('select * from employee')
+        data = my_cursor.fetchall()
+        if len(data) != 0:
+            self.employee_table.delete(*self.employee_table.get_children())
+            for i in data:
+                self.employee_table.insert('', END, values=i)
+            conn.commit()
+        conn.close()
+    # get cursur
+
+    def get_cursor(self, event=''):
+        cursur_row = self.employee_table.focus()
+        content = self.employee_table.item(cursur_row)
+        data = content['values']
+        self.var_dep.set(data[0])
+        self.var_name.set(data[1])
+        self.var_designition.set(data[2])
+        self.var_email.set(data[3])
+        self.var_address.set(data[4])
+        self.var_married.set(data[5])
+        self.var_dob.set(data[6])
+        self.var_doj.set(data[7])
+        self.var_idproofcomb.set(data[8])
+        self.var_idproof.set(data[9])
+        self.var_gender.set(data[10])
+        self.var_phone.set(data[11])
+        self.var_country.set(data[12])
+        self.var_salary.set(data[13])
+
+    def update_data(self):
+        if self.var_dep.get() == "" or self.var_email.get() == "":
+            messagebox.showerror('Error', 'All Fields are required')
+        else:
+            try:
+                update = messagebox.askyesno(
+                    'Update', 'Are you sure update this employee data')
+                if update > 0:
+                    conn = mysql.connector.connect(
+                        host='localhost', username='root', password='Mn03022023', database='mydata')
+                    my_cursor = conn.cursor()
+                    my_cursor.execute('update employee set Department=%s,Name=%s,Designition=%s,Email=%s,Address=%s,Married_Status=%s,DOB=%s,DOJ=%s,id_proof_type=%s,Gender=%s,Phone=%s,Country=%s,Salary=%s where id_proof=%s', (
+                        self.var_dep.get(),
+                        self.var_name.get(),
+                        self.var_designition.get(),
+                        self.var_email.get(),
+                        self.var_address.get(),
+                        self.var_married.get(),
+                        self.var_dob.get(),
+                        self.var_doj.get(),
+                        self.var_idproofcomb.get(),
+                        self.var_gender.get(),
+                        self.var_phone.get(),
+                        self.var_country.get(),
+                        self.var_salary.get(),
+                        self.var_idproof.get()
+                    ))
+                else:
+                    if not update:
+                        return
+                conn.commit()
+                self.fetch_data()
+                conn.close()
+                messagebox.showinfo(
+                    'success', 'Employee Successfully Update', parent=self.root)
+            except Exception as es:
+                messagebox.showerror(
+                    'Error', f'Due to :{str(es)}', parent=self.root)
 
 
 if __name__ == "__main__":
